@@ -228,7 +228,6 @@
     <string name="err_select_logimage_failed">Valg av bilde til loggen mislyktes.</string>
     <string name="err_acquire_image_failed">Henting av bilde mislyktes.</string>
     <string name="err_tb_display">\"Beklager, c:geo klarte ikke å finne den sporbare du etterspurte. Er det virkelig en sporbar (trackable)?</string>
-    <string name="err_tb_details_open">Beklager, c:geo klarte ikke å åpne detaljerene til den sporbare.</string>
     <string name="err_tb_not_loggable">Denne sporbare er ikke mulig å logge.</string>
     <string name="err_tb_not_found">c:geo finner ikke sporbar %s.</string>
     <string name="err_tb_find_that">Beklager, c:geo finner ikke den sporbare.</string>
@@ -2046,7 +2045,6 @@
     <string name="cancel">Avbryt</string>
     <string name="ok" tools:ignore="ButtonCase">Ok</string>
     <!-- ChipChoiceGroup -->
-    <string name="chipchoicegroup_selectall">Velg alle</string>
     <!-- render theme legend: category "areas" -->
     <string name="rtl_category_areas">Områder</string>
     <string name="rtl_heath">varme</string>

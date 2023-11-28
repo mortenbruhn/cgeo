@@ -1,11 +1,9 @@
 package cgeo.geocaching.maps;
 
 import cgeo.geocaching.CacheListActivity;
-import cgeo.geocaching.CachePopup;
 import cgeo.geocaching.CompassActivity;
 import cgeo.geocaching.R;
 import cgeo.geocaching.SearchResult;
-import cgeo.geocaching.WaypointPopup;
 import cgeo.geocaching.activity.AbstractNavigationBarActivity;
 import cgeo.geocaching.activity.ActivityMixin;
 import cgeo.geocaching.connector.ConnectorFactory;
@@ -750,6 +748,7 @@ public class CGeoMap extends AbstractMap implements ViewFactory, OnCacheTapListe
             }
             HistoryTrackUtils.onPrepareOptionsMenu(menu);
             // TrackUtils.onPrepareOptionsMenu is in maps/google/v2/GoogleMapActivity only
+            MapUtils.onPrepareOptionsMenu(menu);
         } catch (final RuntimeException e) {
             Log.e("CGeoMap.onPrepareOptionsMenu", e);
         }
@@ -1658,14 +1657,16 @@ public class CGeoMap extends AbstractMap implements ViewFactory, OnCacheTapListe
             final Geocache cache = DataStore.loadCache(waypoint.getGeocode(), LoadFlags.LOAD_CACHE_OR_DB);
             if (cache != null) {
                 CGeoMap.markCacheAsDirty(cache.getGeocode());
-                CachePopup.startActivityAllowTarget(activity, cache.getGeocode());
+                // CachePopup.startActivityAllowTarget(activity, cache.getGeocode());
+                MapUtils.showCacheDetails(activity, cache.getGeocode());
             }
             return;
         }
 
         if (coordType == CoordinatesType.WAYPOINT && !((Waypoint) waypoint).isNewWaypoint()) {
             CGeoMap.markCacheAsDirty(waypoint.getGeocode());
-            WaypointPopup.startActivityAllowTarget(getActivity(), waypoint.getId(), waypoint.getGeocode());
+            // WaypointPopup.startActivityAllowTarget(getActivity(), waypoint.getId(), waypoint.getGeocode());
+            MapUtils.showWaypointDetails(activity, waypoint.getGeocode(), waypoint.getId());
         }
     }
 

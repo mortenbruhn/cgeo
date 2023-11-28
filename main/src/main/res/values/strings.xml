@@ -1229,6 +1229,9 @@
     <string name="init_create_memory_dump">Create memory dump</string>
     <string name="init_memory_dump">Memory dump</string>
     <string name="init_memory_dumped">Memory dumped to %s</string>
+    <string name="init_reset_otm">Reset one-time messages</string>
+    <string name="init_reset_otm_confirm">Do you want to reset all one-time messages?</string>
+    <string name="init_reset_otm_done">One-time messages have been reset</string>
     <string name="init_please_wait">Please wait…</string>
     <string name="settings_open_website">Open website</string>
     <string name="settings_open_geokretymap_website">Open GeoKretyMap.org website</string>
@@ -1541,7 +1544,7 @@
     <string name="cache_dialog_offline_drop_message">Removing cache from device memory…</string>
     <string name="cache_dialog_refresh_title">Refresh</string>
     <string name="cache_dialog_refresh_message">Reloading cache details…</string>
-	<string name="cache_menu_speechDeactivate">Stop talking</string>
+    <string name="cache_menu_speechDeactivate">Stop talking</string>
     <string name="cache_menu_speechActivate">Start talking</string>
     <string name="cache_menu_navigate">Navigate</string>
     <string name="cache_menu_target">Set as target</string>
@@ -1617,6 +1620,7 @@
     <string name="cache_distance">Distance</string>
     <string name="cache_difficulty">Difficulty</string>
     <string name="cache_terrain">Terrain</string>
+    <string name="cache_difficulty_terrain">D/T</string>
     <string name="cache_rating">Rating</string>
     <string name="cache_own_rating">Your Rating</string>
     <string name="cache_rating_of_new">%1$.1f of %2$d</string>
@@ -1681,6 +1685,7 @@
     <string name="context_map_remove_from_route_pos">Remove from position %d</string>
     <string name="context_map_remove_from_route_end">Remove from end</string>
     <string name="context_map_show_coords">Show coordinates</string>
+    <string name="edit">Edit</string>
 
     <string name="create_internal_cache">Create user-defined cache</string>
     <string name="create_internal_cache_short">New cache</string>
@@ -1696,8 +1701,6 @@
     <string name="init_summary_show_routing_menu">Long tap on a cache shows a menu with advanced options to add/remove the cache to/from a route. If disabled the cache is just added/removed to/from the route.</string>
     <string name="init_ActionbarAutohide">Hide toolbar on tap</string>
     <string name="init_summary_ActionbarAutohide">Tap on free map space to hide/show the toolbar</string>
-    <string name="onetime_info_longtap_disabled">By long tapping on map you can create individual routes and user-defined caches / waypoints.\n\nLong tap on map is currently disabled.\n\nYou can change this in Settings → Map → Map behavior</string>
-    <string name="onetime_info_longtap_enabled">By long tapping on map you can create individual routes and user-defined caches / waypoints.\n\nLong tap on map is currently enabled.\n\nYou can change this in Settings → Map → Map behavior</string>
     <string name="goto_targets_list">User-defined caches</string>
     <string name="clear_goto_history_title">Clear goto history</string>
     <string name="clear_goto_history">This will delete all historical waypoints except the five most recent</string>
@@ -1738,6 +1741,8 @@
 
     <!-- popup -->
     <string name="popup_more">More details</string>
+    <string name="map_fragment_swipe_hint_text">Swipe to open details view</string>
+
 
     <!-- waypoint -->
     <string name="waypoint">Waypoint</string>
@@ -1939,7 +1944,7 @@
     <string name="search_finder">Found by</string>
     <string name="search_finder_prefill">Finder</string>
     <string name="search_finder_button">Search by finder name</string>
-    <string name="search_filter">Filter</string>
+    <string name="search_filter">Search</string>
     <string name="search_filter_button">Search by filter</string>
     <string name="search_filter_info_message" formatted="false">**Search by filter** searches caches on all active online services (e.g. geocaching.com) using a provided filter. However, search capabilities of these services are usually more limited than filter capabilities of c:geo.\n\n- All services only support AND filters (no OR filters and no filter inversion).\n- The more basic filters like **cache type** or **cache size** are supported by all services. More complicated filters are often not supported or have some restrictions e.g. **favorites** or **hidden date**.\n- A detailed list on supported filters per service can be found [here](https://github.com/cgeo/cgeo/wiki/%22Search-by-Filter%22-support-by-c:geo-Connectors).\n\nFilters not supported by the online service will be applied by c:geo on the received results.</string>
     <string name="search_tb">Trackable</string>
@@ -2369,7 +2374,6 @@
 
     <!-- text-to-speech for compass view -->
     <string name="tts_service">Talking compass</string>
-    <string name="tts_toggle">Toggle talking</string>
     <string name="tts_started">Started speech</string>
     <string name="tts_stopped">Stopped speech</string>
     <string name="tts_running">Speech service is running…</string>
@@ -2539,8 +2543,6 @@
     <string name="permission_contacts_read_explanation">c:geo can search for contacts in your address book using cacher names. To do this, you must authorize c:geo to read your address book. Otherwise, usage of this function is not possible.</string>
     <string name="permission_location_explanation_title">Location permission</string>
     <string name="permission_location_explanation">c:geo is optimized for usage with GPS data (fine location) to locate your position and calculate distance and direction to geocaches. Without this permission, location-based functions will not work as expected.</string>
-    <string name="permission_read_external_storage_explanation_title">Read external Storage permission</string>
-    <string name="permission_read_external_storage_explanation">c:geo can use your systems wallpaper as background for the app. To do this, c:geo needs permission to read your media data on external storage.</string>
     <string name="permission_legacy_write_external_storage_explanation">c:geo will write data onto your phone storage or SD card e.g. when you save geocaches for offline use, import or export files and other functions. On some Android versions, you need to grant an additional permission for these actions.</string>
     <string name="permission_legacy_write_external_storage_explanation_title">Legacy Write External Storage permission</string>
     <string name="permission_post_notifications_explanation">c:geo uses notifications to inform you about downloads and approaching caches (if activated)</string>
@@ -2629,12 +2631,12 @@
     <string name="routes_tracks_dialog_title">Routes / tracks options</string>
     <string name="routes_tracks_menu">Routes / Tracks</string>
     <string name="routes_tracks_color">Select color</string>
-    <string name="center_on_route_track">Center on route/track</string>
+    <string name="center">Center</string>
     <string name="unload_route_track">Unload route/track</string>
     <string name="route">Route</string>
     <string name="track">Track</string>
-    <string name="make_visible">make visible</string>
-    <string name="hide">hide</string>
+    <string name="make_visible">Make visible</string>
+    <string name="hide">Hide</string>
 
     <!-- distance units -->
     <string name="unit_m">m</string>
@@ -2817,8 +2819,9 @@
     <string name="ok" tools:ignore="ButtonCase">Ok</string>
     <string name="optimize">Optimize</string>
 
-    <!-- ChipChoiceGroup -->
-    <string name="chipchoicegroup_selectall">Select All</string>
+    <!-- Multi-Selections -->
+    <string name="multiselect_selectall">Select All</string>
+    <string name="multiselect_selectvisible">Select Visible</string>
 
     <!-- render theme legend: category "areas" -->
     <string name="rtl_category_areas">Areas</string>

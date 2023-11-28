@@ -224,7 +224,6 @@
     <string name="err_select_logimage_failed">Valg af billede til logbeskeden mislykkedes.</string>
     <string name="err_acquire_image_failed">Optagelse af et billede mislykkedes.</string>
     <string name="err_tb_display">c:geo kan ikke vise den forespurgte Trackable. Er det virkelig en Trackable?</string>
-    <string name="err_tb_details_open">c:geo kan ikke åbne Trackable-detaljer.</string>
     <string name="err_tb_not_loggable">Denne trackable kan ikke logges.</string>
     <string name="err_tb_not_found">c:geo kan ikke finde trackable %s.</string>
     <string name="err_tb_find_that">c:geo kan ikke finde den forespurgte Trackable.</string>
@@ -1148,6 +1147,7 @@
     <string name="search_hbu_prefill">Ejer</string>
     <string name="search_hbu_button">Søg ejer</string>
     <string name="search_finder">Fundet af</string>
+    <string name="search_filter">Filter</string>
     <string name="search_filter_button">Søg med filter</string>
     <string name="search_tb">Trackable</string>
     <string name="search_tb_hint">Trackable id</string>

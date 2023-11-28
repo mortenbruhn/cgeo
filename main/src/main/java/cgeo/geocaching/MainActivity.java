@@ -8,7 +8,6 @@ import cgeo.geocaching.connector.capability.ILogin;
 import cgeo.geocaching.connector.gc.BookmarkListActivity;
 import cgeo.geocaching.connector.gc.GCConnector;
 import cgeo.geocaching.connector.gc.GCConstants;
-import cgeo.geocaching.connector.gc.GCLogin;
 import cgeo.geocaching.connector.gc.PocketQueryListActivity;
 import cgeo.geocaching.connector.internal.InternalConnector;
 import cgeo.geocaching.databinding.MainActivityBinding;
@@ -18,7 +17,6 @@ import cgeo.geocaching.enumerations.QuickLaunchItem;
 import cgeo.geocaching.helper.UsefulAppsActivity;
 import cgeo.geocaching.models.Download;
 import cgeo.geocaching.network.Network;
-import cgeo.geocaching.network.Parameters;
 import cgeo.geocaching.permission.PermissionAction;
 import cgeo.geocaching.permission.PermissionContext;
 import cgeo.geocaching.search.GeocacheSuggestionsAdapter;
@@ -44,22 +42,22 @@ import cgeo.geocaching.utils.ContextLogger;
 import cgeo.geocaching.utils.DebugUtils;
 import cgeo.geocaching.utils.DisplayUtils;
 import cgeo.geocaching.utils.Formatter;
-import cgeo.geocaching.utils.JsonUtils;
 import cgeo.geocaching.utils.Log;
+import cgeo.geocaching.utils.MessageCenterUtils;
 import cgeo.geocaching.utils.ProcessUtils;
 import cgeo.geocaching.utils.ShareUtils;
 import cgeo.geocaching.utils.config.LegacyFilterConfig;
 import cgeo.geocaching.utils.functions.Action1;
+import static cgeo.geocaching.Intents.EXTRA_MESSAGE_CENTER_COUNTER;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.SearchManager;
-import android.app.WallpaperManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -82,21 +80,13 @@ import androidx.appcompat.widget.TooltipCompat;
 import androidx.core.util.Pair;
 import androidx.core.view.MenuCompat;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.android.material.button.MaterialButton;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.functions.Consumer;
-import io.reactivex.rxjava3.schedulers.Schedulers;
-import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 
 public class MainActivity extends AbstractNavigationBarActivity {
@@ -119,7 +109,6 @@ public class MainActivity extends AbstractNavigationBarActivity {
     private final CompositeDisposable resumeDisposables = new CompositeDisposable();
 
     private final PermissionAction<Void> askLocationPermissionAction = PermissionAction.register(this, PermissionContext.LOCATION, b -> binding.locationStatus.updatePermissions());
-    private final PermissionAction<Void> askShowWallpaperPermissionAction = PermissionAction.register(this, PermissionContext.SHOW_WALLPAPER, b -> setWallpaper());
 
     private Long lastMCTime = 0L;
 
@@ -246,6 +235,7 @@ public class MainActivity extends AbstractNavigationBarActivity {
     public void onCreate(final Bundle savedInstanceState) {
         try (ContextLogger cLog = new ContextLogger(Log.LogLevel.DEBUG, "MainActivity.onCreate")) {
             // don't call the super implementation with the layout argument, as that would set the wrong theme
+            setTheme(Settings.isWallpaper() ? R.style.cgeo_withWallpaper : R.style.cgeo);
             super.onCreate(savedInstanceState);
 
             binding = MainActivityBinding.inflate(getLayoutInflater());
@@ -263,7 +253,7 @@ public class MainActivity extends AbstractNavigationBarActivity {
             cLog.add("init");
 
             binding.infoNotloggedin.setOnClickListener(v ->
-                    SimpleDialog.of(this).setTitle(R.string.warn_notloggedin_title).setMessage(R.string.warn_notloggedin_long).setButtons(SimpleDialog.ButtonTextSet.YES_NO).confirm((dialog, which) -> SettingsActivity.openForScreen(R.string.preference_screen_services, this)));
+                    SimpleDialog.of(this).setTitle(R.string.warn_notloggedin_title).setMessage(R.string.warn_notloggedin_long).setButtons(SimpleDialog.ButtonTextSet.YES_NO).confirm(() -> SettingsActivity.openForScreen(R.string.preference_screen_services, this)));
 
             // automated update check
             DownloaderUtils.checkForRoutingTileUpdates(this);
@@ -275,10 +265,6 @@ public class MainActivity extends AbstractNavigationBarActivity {
             binding.locationStatus.setPermissionRequestCallback(() -> {
                 this.askLocationPermissionAction.launch(null);
             });
-
-            if (Settings.isWallpaper()) {
-                askShowWallpaperPermissionAction.launch();
-            }
 
             configureMessageCenterPolling();
 
@@ -292,60 +278,21 @@ public class MainActivity extends AbstractNavigationBarActivity {
     }
 
     private void configureMessageCenterPolling() {
-        final Observable<JsonNode> pollingObservable = Observable.interval(10, 300, TimeUnit.SECONDS)
-                .flatMap(tick -> {
-                    if (Settings.getBoolean(R.string.pref_pollMessageCenter, false)) {
-                        final JsonNode temp = getMessageCenterStatus();
-                        return temp != null ? Observable.just(temp) : Observable.empty();
-                    } else {
-                        return Observable.empty();
+        final Activity that = this;
+        MessageCenterUtils.setReceiver(this, intent -> {
+            if (Looper.myLooper() == null) {
+                Looper.prepare();
+            }
+            final int count = intent.getIntExtra(EXTRA_MESSAGE_CENTER_COUNTER, 0);
+            new Handler(Looper.getMainLooper()).post(() -> { // needs to be done on UI thread
+                displayActionItem(R.id.mcupdate, res.getQuantityString(R.plurals.mcupdate, count, count), (actionRequested) -> {
+                    updateHomeBadge(-1);
+                    if (actionRequested) {
+                        ShareUtils.openUrl(that, GCConstants.URL_MESSAGECENTER);
                     }
                 });
-
-        resumeDisposables.add(pollingObservable
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.single())
-                .subscribe(data -> {
-                    @SuppressLint("SimpleDateFormat")
-                    final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-                    final long time = Objects.requireNonNull(df.parse(data.at("/lastConversationActivityDateUtc").textValue())).getTime();
-                    final int count = Integer.parseInt(data.at("/unreadConversationCount").toString());
-                    if (time != lastMCTime) {
-                        lastMCTime = time;
-                        if (count > 0) {
-                            Looper.prepare();
-                            new Handler(Looper.getMainLooper()).post(() -> { // needs to be done on UI thread
-                                updateHomeBadge(1);
-                                displayActionItem(R.id.mcupdate, res.getQuantityString(R.plurals.mcupdate, count, count), (actionRequested) -> {
-                                    updateHomeBadge(-1);
-                                    if (actionRequested) {
-                                        ShareUtils.openUrl(this, GCConstants.URL_MESSAGECENTER);
-                                    }
-                                });
-                            });
-                        }
-                    }
-                }, throwable -> {
-                    Log.e("Error occurred while polling message center: " + throwable.getMessage());
-                }));
-    }
-
-
-    @Nullable
-    private static JsonNode getMessageCenterStatus() {
-        if (!GCConnector.getInstance().isLoggedIn()) {
-            return null;
-        }
-        final Response response = Network.getRequest("https://www.geocaching.com/api/communication-service/participant/" + GCLogin.getInstance().getPublicGuid() + "/summary/", new Parameters()).blockingGet();
-        if (!response.isSuccessful()) {
-            return null;
-        }
-        final String jsonString = Network.getResponseData(response);
-        try {
-            return JsonUtils.reader.readTree(jsonString);
-        } catch (Exception ignore) {
-            return null;
-        }
+            });
+        });
     }
 
     private void prepareQuickLaunchItems() {
@@ -419,7 +366,7 @@ public class MainActivity extends AbstractNavigationBarActivity {
                             if (colStatus >= 0) {
                                 final int status = c.getInt(colStatus);
                                 if (status != DownloadManager.STATUS_RUNNING && status != DownloadManager.STATUS_SUCCESSFUL) {
-                                    SimpleDialog.of(this).setTitle(R.string.downloader_pending_downloads).setMessage(R.string.downloader_pending_info).confirm((dialog, which) -> startActivity(new Intent(this, PendingDownloadsActivity.class)));
+                                    SimpleDialog.of(this).setTitle(R.string.downloader_pending_downloads).setMessage(R.string.downloader_pending_info).confirm(() -> startActivity(new Intent(this, PendingDownloadsActivity.class)));
                                     Settings.setPendingDownloadsLastCheck(false);
                                     break;
                                 }
@@ -449,20 +396,12 @@ public class MainActivity extends AbstractNavigationBarActivity {
             updateUserInfoHandler.sendEmptyMessage(-1);
             cLog.add("perm");
 
-            setWallpaper();
-
             init();
         }
 
         if (Log.isEnabled(Log.LogLevel.DEBUG)) {
             binding.getRoot().post(() -> Log.d("Post after MainActivity.onResume"));
         }
-    }
-
-    private void setWallpaper() {
-        final Drawable wallpaper =  (Settings.isWallpaper() && PermissionContext.SHOW_WALLPAPER.hasAllPermissions()) ?
-                WallpaperManager.getInstance(this).getDrawable() : null;
-            ((ImageView) findViewById(R.id.background)).setImageDrawable(wallpaper);
     }
 
     @Override

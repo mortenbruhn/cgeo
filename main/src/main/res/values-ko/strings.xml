@@ -258,7 +258,6 @@
     <string name="err_acquire_image_failed">사진 가져오기 실패</string>
     <string name="err_acquire_image_unsupported_format">이미지 형식은 JPEG/JPG, PNG 또는 GIF 중 하나여야 합니다.</string>
     <string name="err_tb_display">원하시는 추적아이템을 표시할 수 없습니다. 정말 추적아이템이 맞나요?</string>
-    <string name="err_tb_details_open">추적아이템 상세정보를 열 수 없습니다.</string>
     <string name="err_tb_not_loggable">이 추적아이템은 로그할 수 없습니다.</string>
     <string name="err_tb_not_found">%s 추적아이템을 찾을 수 없습니다.</string>
     <string name="err_tb_find_that">해당 추적아이템을 찾을 수 없습니다.</string>
@@ -1349,6 +1348,8 @@
     <string name="cache_dialog_offline_drop_message">기기에서 캐시 제거중…</string>
     <string name="cache_dialog_refresh_title">새로 고침</string>
     <string name="cache_dialog_refresh_message">캐시 정보 다시 불러오는 중…</string>
+    <string name="cache_menu_speechDeactivate">말하기 끝</string>
+    <string name="cache_menu_speechActivate">말하기 시작</string>
     <string name="cache_menu_navigate">길찾기</string>
     <string name="cache_menu_target">대상으로 설정</string>
     <string name="cache_menu_navigation_drive">길찾기(자동차)</string>
@@ -2266,6 +2267,7 @@
     <string name="map_individual_route_cleared">개인 경로 지웠음</string>
     <string name="sorted_route_saved">개인 경로가 저장되었습니다.</string>
     <string name="load_individual_route_error">개인 경로를 로드하는 중에 오류가 발생했습니다.</string>
+    <string name="route_item_point">경로 지점</string>
     <string name="route_item_not_yet_loaded">경로 항목이 아직 로드되지 않았습니다.</string>
     <plurals name="individual_route_loaded">
         <item quantity="other">경로는 %d 개의 경로점이 로드되었습니다.</item>
@@ -2467,7 +2469,6 @@
     <string name="ok" tools:ignore="ButtonCase">확인</string>
     <string name="optimize">최적화</string>
     <!-- ChipChoiceGroup -->
-    <string name="chipchoicegroup_selectall">모두 선택</string>
     <!-- render theme legend: category "areas" -->
     <string name="rtl_category_areas">영역</string>
     <string name="rtl_fell_meadow">목초지</string>

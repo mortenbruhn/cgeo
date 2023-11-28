@@ -233,7 +233,6 @@
     <string name="err_acquire_image_failed">Vaizdo gauti nepavyko.</string>
     <string name="err_acquire_image_unsupported_format">Vaizdo formatas turi būti JPEG/JPG, PNG arba GIF</string>
     <string name="err_tb_display">c:geo negali parodyti norimo keliauninko. Ar tai tikrai keliauninkas?</string>
-    <string name="err_tb_details_open">c:geo negali atidaryti keliauninko informacijos.</string>
     <string name="err_tb_not_loggable">Šis keliauninkas neregistruojamas.</string>
     <string name="err_tb_not_found">c:geo neranda %s keliauninko.</string>
     <string name="err_tb_find_that">c:geo neranda šito keliauninko.</string>
@@ -2433,7 +2432,6 @@
     <string name="ok" tools:ignore="ButtonCase">Gerai</string>
     <string name="optimize">Optimizuoti</string>
     <!-- ChipChoiceGroup -->
-    <string name="chipchoicegroup_selectall">Pažymėti viską</string>
     <!-- render theme legend: category "areas" -->
     <string name="rtl_category_areas">Plotai</string>
     <string name="rtl_fell_meadow">kirtimas / pieva</string>

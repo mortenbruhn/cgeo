@@ -4,6 +4,7 @@ import cgeo.geocaching.apps.navi.NavigationAppFactory;
 import cgeo.geocaching.databinding.WaypointPopupBinding;
 import cgeo.geocaching.location.Geopoint;
 import cgeo.geocaching.location.Units;
+import cgeo.geocaching.maps.MapUtils;
 import cgeo.geocaching.models.Geocache;
 import cgeo.geocaching.models.Waypoint;
 import cgeo.geocaching.sensors.GeoData;
@@ -24,7 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -38,9 +39,7 @@ public class WaypointPopupFragment extends AbstractDialogFragmentWithProximityNo
     @Override
     public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
         binding = WaypointPopupBinding.inflate(getLayoutInflater(), container, false);
-        final View v = binding.getRoot();
-        initCustomActionBar(v);
-        return v;
+        return binding.getRoot();
     }
 
     @Override
@@ -73,7 +72,7 @@ public class WaypointPopupFragment extends AbstractDialogFragmentWithProximityNo
 
         if (waypoint == null) {
             Log.e("WaypointPopupFragment.init: unable to get waypoint " + waypointId);
-            getActivity().finish();
+            MapUtils.removeDetailsFragment(requireActivity());
             return;
         }
 
@@ -81,9 +80,16 @@ public class WaypointPopupFragment extends AbstractDialogFragmentWithProximityNo
             final String wpCode = waypoint.getPrefix() + waypoint.getShortGeocode().substring(2);
             binding.toolbar.toolbar.setTitle(wpCode);
             binding.toolbar.toolbar.setLogo(MapMarkerUtils.getWaypointMarker(res, waypoint, false, Settings.getIconScaleEverywhere()).getDrawable());
+            onCreatePopupOptionsMenu(binding.toolbar.toolbar, this, cache);
+            binding.toolbar.toolbar.setOnMenuItemClickListener(this::onPopupOptionsItemSelected);
 
             binding.title.setText(TextUtils.coloredCacheText(getActivity(), cache, cache.getName()));
             details = new CacheDetailsCreator(getActivity(), binding.waypointDetailsList);
+
+            // Cache name and type
+            final String cacheType = cache.getType().getL10n();
+            final String cacheSize = cache.showSize() ? " (" + cache.getSize().getL10n() + ")" : "";
+            details.add(R.string.cache_type, cacheType + cacheSize + " (" + cache.getShortGeocode() + ")");
 
             //Waypoint name
             if (StringUtils.isNotBlank(waypoint.getName())) {
@@ -98,6 +104,7 @@ public class WaypointPopupFragment extends AbstractDialogFragmentWithProximityNo
             if (StringUtils.isNotBlank(userNote)) {
                 details.addHtml(R.string.waypoint_user_note, userNote, waypoint.getShortGeocode());
             }
+            details.addLatestLogs(cache);
 
             binding.toggleVisited.setChecked(waypoint.isVisited());
             binding.toggleVisited.setOnClickListener(arg1 -> {
@@ -108,11 +115,11 @@ public class WaypointPopupFragment extends AbstractDialogFragmentWithProximityNo
 
             binding.edit.setOnClickListener(arg0 -> {
                 EditWaypointActivity.startActivityEditWaypoint(getActivity(), cache, waypoint.getId());
-                getActivity().finish();
             });
 
-            details = new CacheDetailsCreator(getActivity(), binding.detailsList);
-            addCacheDetails(true);
+            binding.moreDetails.setOnClickListener(arg0 -> {
+                CacheDetailActivity.startActivity(getActivity(), geocode);
+            });
 
             final View view = getView();
             assert view != null;
@@ -153,7 +160,6 @@ public class WaypointPopupFragment extends AbstractDialogFragmentWithProximityNo
             return;
         }
         NavigationAppFactory.startDefaultNavigationApplication(2, getActivity(), waypoint);
-        getActivity().finish();
     }
 
 
@@ -170,15 +176,15 @@ public class WaypointPopupFragment extends AbstractDialogFragmentWithProximityNo
         return new TargetInfo(waypoint.getCoords(), cache.getGeocode());
     }
 
-    public static DialogFragment newInstance(final String geocode, final int waypointId) {
+    public static Fragment newInstance(final String geocode, final int waypointId) {
 
         final Bundle args = new Bundle();
         args.putInt(WAYPOINT_ARG, waypointId);
         args.putString(GEOCODE_ARG, geocode);
 
-        final DialogFragment f = new WaypointPopupFragment();
+        final Fragment f = new WaypointPopupFragment();
         f.setArguments(args);
-        f.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
+        // f.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
 
         return f;
     }

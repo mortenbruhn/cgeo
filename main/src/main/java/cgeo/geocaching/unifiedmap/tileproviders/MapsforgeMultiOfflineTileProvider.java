@@ -9,6 +9,8 @@ import cgeo.geocaching.unifiedmap.mapsforgevtm.MapsforgeVtmFragment;
 
 import android.net.Uri;
 
+import androidx.core.util.Pair;
+
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,35 +39,44 @@ class MapsforgeMultiOfflineTileProvider extends AbstractMapsforgeOfflineTileProv
     public void addTileLayer(final MapsforgeVtmFragment fragment, final Map map) {
         // collect metadata first: languages, zoom level range and bounding boxes
         final ArrayList<String> languages = new ArrayList<>();
+        final StringBuilder mapAttribution = new StringBuilder();
         BoundingBox boundingBox = null;
         for (ImmutablePair<String, Uri> data : maps) {
             final MapFileTileSource source = new MapFileTileSource();
             source.setMapFileInputStream((FileInputStream) ContentStorage.get().openForRead(data.right));
             source.open();
             final MapInfo info = source.getMapInfo();
-
             source.close();
             if (info != null) {
                 checkLanguage(languages, info.languagesPreference);
                 parseZoomLevel(info.zoomLevel);
                 boundingBox = boundingBox == null ? info.boundingBox : boundingBox.extendBoundingBox(info.boundingBox);
+
+                // map attribution
+                final String temp = StringUtils.isNotBlank(info.comment) ? info.comment : StringUtils.isNotBlank(info.createdBy) ? info.createdBy : "";
+                mapAttribution.append("<p><b>").append(data.left).append(":</b>");
+                if (StringUtils.isNotBlank(temp)) {
+                    mapAttribution.append("<br />").append(temp);
+                }
+                mapAttribution.append("</p>");
             }
         }
 
         // now prepare combined map
-        final MultiMapFileTileSource tileSource = new MultiMapFileTileSource();
+        tileSource = new MultiMapFileTileSource();
         tileSource.setPreferredLanguage(Settings.getMapLanguage());
         for (ImmutablePair<String, Uri> data : maps) {
             final MapFileTileSource mapFileTileSource = new MapFileTileSource();
             mapFileTileSource.setMapFileInputStream((FileInputStream) ContentStorage.get().openForRead(data.right));
-            tileSource.add(mapFileTileSource);
+            ((MultiMapFileTileSource) tileSource).add(mapFileTileSource);
         }
         supportsLanguages = languages.size() > 0;
         if (supportsLanguages) {
             TileProviderFactory.setLanguages(languages.toArray(new String[]{}));
         }
+        setMapAttribution(new Pair<>(mapAttribution.toString(), true));
 
-        final VectorTileLayer tileLayer = (VectorTileLayer) fragment.setBaseMap(tileSource);
+        final VectorTileLayer tileLayer = (VectorTileLayer) fragment.setBaseMap((MultiMapFileTileSource) tileSource);
         fragment.addLayer(LayerHelper.ZINDEX_BUILDINGS, new BuildingLayer(map, tileLayer));
         fragment.addLayer(LayerHelper.ZINDEX_LABELS, new LabelLayer(map, tileLayer));
         fragment.applyTheme();

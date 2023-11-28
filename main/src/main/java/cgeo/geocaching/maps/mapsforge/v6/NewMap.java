@@ -3,13 +3,11 @@ package cgeo.geocaching.maps.mapsforge.v6;
 import cgeo.geocaching.AbstractDialogFragment;
 import cgeo.geocaching.AbstractDialogFragment.TargetInfo;
 import cgeo.geocaching.CacheListActivity;
-import cgeo.geocaching.CachePopup;
 import cgeo.geocaching.CompassActivity;
 import cgeo.geocaching.Intents;
 import cgeo.geocaching.R;
 import cgeo.geocaching.SearchResult;
-import cgeo.geocaching.WaypointPopup;
-import cgeo.geocaching.activity.AbstractNavigationBarActivity;
+import cgeo.geocaching.activity.AbstractNavigationBarMapActivity;
 import cgeo.geocaching.activity.ActivityMixin;
 import cgeo.geocaching.activity.FilteredActivity;
 import cgeo.geocaching.databinding.MapMapsforgeV6Binding;
@@ -69,6 +67,7 @@ import cgeo.geocaching.ui.GeoItemSelectorUtils;
 import cgeo.geocaching.ui.ToggleItemType;
 import cgeo.geocaching.ui.ViewUtils;
 import cgeo.geocaching.ui.dialog.Dialogs;
+import cgeo.geocaching.ui.dialog.SimpleDialog;
 import cgeo.geocaching.utils.AndroidRxUtils;
 import cgeo.geocaching.utils.AngleUtils;
 import cgeo.geocaching.utils.ApplicationSettings;
@@ -90,7 +89,6 @@ import static cgeo.geocaching.maps.mapsforge.v6.caches.CachesBundle.NO_OVERLAY_I
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources.NotFoundException;
@@ -106,10 +104,7 @@ import android.text.util.Linkify;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.ListAdapter;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -152,7 +147,7 @@ import org.mapsforge.map.model.common.Observer;
 @SuppressLint("ClickableViewAccessibility")
 // This is definitely a valid issue, but can't be refactored in one step
 @SuppressWarnings("PMD.ExcessiveClassLength")
-public class NewMap extends AbstractNavigationBarActivity implements Observer, FilteredActivity {
+public class NewMap extends AbstractNavigationBarMapActivity implements Observer, FilteredActivity, AbstractDialogFragment.TargetUpdateReceiver {
     private static final String STATE_ROUTETRACKUTILS = "routetrackutils";
 
     private static final String ROUTING_SERVICE_KEY = "NewMap";
@@ -436,6 +431,7 @@ public class NewMap extends AbstractNavigationBarActivity implements Observer, F
                 LoggingUI.onPrepareOptionsMenu(menu, getSingleModeCache());
             }
             HistoryTrackUtils.onPrepareOptionsMenu(menu);
+            MapUtils.onPrepareOptionsMenu(menu);
         } catch (final RuntimeException e) {
             Log.e("NewMap.onPrepareOptionsMenu", e);
         }
@@ -794,6 +790,7 @@ public class NewMap extends AbstractNavigationBarActivity implements Observer, F
         super.onStart();
         Log.d("NewMap: onStart");
 
+        MapUtils.removeDetailsFragment(this);
         initializeLayers();
     }
 
@@ -1012,6 +1009,15 @@ public class NewMap extends AbstractNavigationBarActivity implements Observer, F
                     .setOnDismissListener(menu -> tapHandlerLayer.resetLongTapLatLong())
                     .show();
         }
+    }
+
+    @Override
+    public void onReceiveTargetUpdate(final TargetInfo targetInfo) {
+        if (Settings.isAutotargetIndividualRoute()) {
+            Settings.setAutotargetIndividualRoute(false);
+            Toast.makeText(this, R.string.map_disable_autotarget_individual_route, Toast.LENGTH_SHORT).show();
+        }
+        setTarget(targetInfo.coords, targetInfo.geocode);
     }
 
     // set my location listener
@@ -1324,6 +1330,9 @@ public class NewMap extends AbstractNavigationBarActivity implements Observer, F
 
     public void showSelection(@NonNull final List<GeoitemRef> items, final boolean longPressMode) {
         if (items.isEmpty() && !longPressMode) {
+            if (MapUtils.removeDetailsFragment(this)) {
+                return;
+            }
             HideActionBarUtils.toggleActionBar(this);
         }
         if (items.isEmpty()) {
@@ -1344,21 +1353,24 @@ public class NewMap extends AbstractNavigationBarActivity implements Observer, F
             final ArrayList<GeoitemRef> sorted = new ArrayList<>(items);
             Collections.sort(sorted, GeoitemRef.NAME_COMPARATOR);
 
-            final ListAdapter adapter = new ArrayAdapter<GeoitemRef>(this, R.layout.cacheslist_item_select, sorted) {
-                @NonNull
-                @Override
-                public View getView(final int position, final View convertView, @NonNull final ViewGroup parent) {
-                    return GeoItemSelectorUtils.createGeoItemView(NewMap.this, getItem(position),
-                            GeoItemSelectorUtils.getOrCreateView(NewMap.this, convertView, parent));
-                }
-            };
+            final SimpleDialog.ItemSelectModel<GeoitemRef> model = new SimpleDialog.ItemSelectModel<GeoitemRef>();
+            model
+                .setItems(sorted)
+                .setDisplayViewMapper((item, ctx, view, parent) ->
+                        GeoItemSelectorUtils.createGeoItemView(NewMap.this, item, GeoItemSelectorUtils.getOrCreateView(NewMap.this, view, parent)),
+                        (item) -> item.getName() + "::" + item.getGeocode())
+                .setItemPadding(0)
+                .setPlainItemPaddingLeftInDp(0);
 
-            final AlertDialog dialog = Dialogs.newBuilder(this)
-                    .setTitle(res.getString(R.string.map_select_multiple_items))
-                    .setAdapter(adapter, new SelectionClickListener(sorted, longPressMode))
-                    .create();
-            dialog.setCanceledOnTouchOutside(true);
-            dialog.show();
+            SimpleDialog.of(this).setTitle(R.string.map_select_multiple_items).selectSingle(model, item -> {
+                if (longPressMode) {
+                    if (Settings.isLongTapOnMapActivated()) {
+                        triggerCacheWaypointLongTapContextMenu(item);
+                    }
+                } else {
+                    showPopup(item);
+                }
+            });
 
         } catch (final NotFoundException e) {
             Log.e("NewMap.showSelection", e);
@@ -1395,33 +1407,6 @@ public class NewMap extends AbstractNavigationBarActivity implements Observer, F
         }
     }
 
-    private class SelectionClickListener implements DialogInterface.OnClickListener {
-
-        @NonNull
-        private final List<GeoitemRef> items;
-        private final boolean longPressMode;
-
-        SelectionClickListener(@NonNull final List<GeoitemRef> items, final boolean longPressMode) {
-            this.items = items;
-            this.longPressMode = longPressMode;
-        }
-
-        @Override
-        public void onClick(final DialogInterface dialog, final int which) {
-            if (which >= 0 && which < items.size()) {
-                final GeoitemRef item = items.get(which);
-                if (longPressMode) {
-                    if (Settings.isLongTapOnMapActivated()) {
-                        triggerCacheWaypointLongTapContextMenu(item);
-                    }
-                } else {
-                    showPopup(item);
-                }
-            }
-        }
-
-    }
-
     private void showPopup(final GeoitemRef item) {
         if (item == null || StringUtils.isEmpty(item.getGeocode())) {
             return;
@@ -1432,7 +1417,8 @@ public class NewMap extends AbstractNavigationBarActivity implements Observer, F
                 final Geocache cache = DataStore.loadCache(item.getGeocode(), LoadFlags.LOAD_CACHE_OR_DB);
                 if (cache != null) {
                     popupGeocodes.add(cache.getGeocode());
-                    CachePopup.startActivityAllowTarget(this, cache.getGeocode());
+                    // CachePopup.startActivityAllowTarget(this, cache.getGeocode());
+                    MapUtils.showCacheDetails(this, cache.getGeocode());
                     return;
                 }
                 return;
@@ -1440,7 +1426,8 @@ public class NewMap extends AbstractNavigationBarActivity implements Observer, F
 
             if (item.getType() == CoordinatesType.WAYPOINT && item.getId() >= 0) {
                 popupGeocodes.add(item.getGeocode());
-                WaypointPopup.startActivityAllowTarget(this, item.getId(), item.getGeocode());
+                // WaypointPopup.startActivityAllowTarget(this, item.getId(), item.getGeocode());
+                MapUtils.showWaypointDetails(this, item.getGeocode(), item.getId());
             }
 
         } catch (final NotFoundException e) {

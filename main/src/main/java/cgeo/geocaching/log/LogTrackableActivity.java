@@ -54,6 +54,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class LogTrackableActivity extends AbstractLoggingActivity implements CoordinateUpdate, LoaderManager.LoaderCallbacks<List<LogTypeTrackable>> {
+
+    private static final LogTypeTrackable[] PREFERRED_DEFAULTS = new LogTypeTrackable[] { LogTypeTrackable.DISCOVERED_IT, LogTypeTrackable.NOTE, LogTypeTrackable.RETRIEVED_IT };
     private LogtrackableActivityBinding binding;
 
     private final CompositeDisposable createDisposables = new CompositeDisposable();
@@ -104,7 +106,18 @@ public class LogTrackableActivity extends AbstractLoggingActivity implements Coo
             logType.setValues(possibleLogTypesTrackable);
 
             if (!logTypesTrackable.contains(typeSelected)) {
-                setType(logTypesTrackable.get(0), false);
+                //currently selected is not possible -> select the most preferred default
+                boolean found = false;
+                for (LogTypeTrackable candidate : PREFERRED_DEFAULTS) {
+                    if (logTypesTrackable.contains(candidate)) {
+                        setType(candidate, false);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    setType(logTypesTrackable.get(0), false);
+                }
                 showToast(res.getString(R.string.info_log_type_changed));
             }
         }
@@ -242,7 +255,7 @@ public class LogTrackableActivity extends AbstractLoggingActivity implements Coo
     }
 
     private void init() {
-        logType.setTextView(binding.type).setDisplayMapper(LogTypeTrackable::getLabel);
+        logType.setTextView(binding.type).setDisplayMapperPure(LogTypeTrackable::getLabel);
         logType.setValues(possibleLogTypesTrackable);
         logType.setChangeListener(lt -> setType(lt, true));
 
@@ -373,7 +386,7 @@ public class LogTrackableActivity extends AbstractLoggingActivity implements Coo
             } else {
                 // Redirect user to concerned connector settings
                 //Dialogs.confirmYesNo(this, res.getString(R.string.settings_title_open_settings), res.getString(R.string.err_trackable_log_not_anonymous, trackable.getBrand().getLabel(), connector.getServiceTitle()), (dialog, which) -> {
-                SimpleDialog.of(this).setTitle(R.string.settings_title_open_settings).setMessage(R.string.err_trackable_log_not_anonymous, trackable.getBrand().getLabel(), connector.getServiceTitle()).setButtons(SimpleDialog.ButtonTextSet.YES_NO).confirm((dialog, which) -> {
+                SimpleDialog.of(this).setTitle(R.string.settings_title_open_settings).setMessage(R.string.err_trackable_log_not_anonymous, trackable.getBrand().getLabel(), connector.getServiceTitle()).setButtons(SimpleDialog.ButtonTextSet.YES_NO).confirm(() -> {
                     if (connector.getPreferenceActivity() > 0) {
                         SettingsActivity.openForScreen(connector.getPreferenceActivity(), LogTrackableActivity.this);
                     } else {

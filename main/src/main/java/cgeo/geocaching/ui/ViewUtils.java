@@ -284,7 +284,7 @@ public class ViewUtils {
         final CheckboxItemBinding itemBinding = CheckboxItemBinding.bind(itemView);
         text.applyTo(itemBinding.itemText);
         if (icon != null) {
-            icon.apply(itemBinding.itemIcon);
+            icon.applyTo(itemBinding.itemIcon);
         }
         if (infoText != null) {
             itemBinding.itemInfo.setVisibility(View.VISIBLE);
@@ -428,11 +428,21 @@ public class ViewUtils {
     }
 
     public static Context wrap(final Context ctx) {
+        return wrap(ctx, R.style.cgeo);
+    }
+
+    public static Context wrap(final Context ctx, @StyleRes final int themeResId) {
         //Avoid wrapping already wrapped context's
-        if (ctx instanceof ContextThemeWrapperWrapper && ((ContextThemeWrapperWrapper) ctx).getThemeResId() == R.style.cgeo) {
-            return ctx;
+        if (ctx instanceof ContextThemeWrapperWrapper) {
+            final ContextThemeWrapperWrapper wrapperCtx = (ContextThemeWrapperWrapper) ctx;
+            if (wrapperCtx.getThemeResId() == themeResId) {
+                //ctx is already wrapped with correct themeResId -> just return
+                return ctx;
+            }
+            //re-wrap with new themeResId
+            return new ContextThemeWrapperWrapper(wrapperCtx.base, themeResId);
         }
-        return new ContextThemeWrapperWrapper(ctx, R.style.cgeo);
+        return new ContextThemeWrapperWrapper(ctx, themeResId);
     }
 
     /**
@@ -441,14 +451,20 @@ public class ViewUtils {
     private static class ContextThemeWrapperWrapper extends ContextThemeWrapper {
 
         private final int themeResId;
+        private final Context base;
 
         ContextThemeWrapperWrapper(final Context base, @StyleRes final int themeResId) {
             super(base, themeResId);
             this.themeResId = themeResId;
+            this.base = base;
         }
 
         public int getThemeResId() {
             return themeResId;
+        }
+
+        public Context getBaseContext() {
+            return base;
         }
     }
 
@@ -583,5 +599,24 @@ public class ViewUtils {
             Log.d("Caught Error on Linkify.addLinks", re);
             return false;
         }
+    }
+
+    /** Sets padding (in DP) to apply to each list item.
+     *  If 4 numbers are given, they are applied to left, top, right, bottom in that order
+     *  If 2 numbers are given, they are applied to horizontal (left+right), vertical (top+bottom)
+     *  If 1 number is given it is applied to all 4 sides
+     *  Otherwise nothing is done and false is returned
+     */
+    public static boolean applyPadding(final View view, final int[] paddingsInDp) {
+        if (view == null || paddingsInDp == null || paddingsInDp.length < 1 || paddingsInDp.length > 4 || paddingsInDp.length == 3) {
+            return false;
+        }
+        if (paddingsInDp.length == 4) {
+            view.setPadding(dpToPixel(paddingsInDp[0]), dpToPixel(paddingsInDp[1]), dpToPixel(paddingsInDp[2]), dpToPixel(paddingsInDp[3]));
+        } else if (paddingsInDp.length == 2) {
+            view.setPadding(dpToPixel(paddingsInDp[0]), dpToPixel(paddingsInDp[1]), dpToPixel(paddingsInDp[0]), dpToPixel(paddingsInDp[1]));
+        } else { //paddingsInDp-length is 1
+            view.setPadding(dpToPixel(paddingsInDp[0]), dpToPixel(paddingsInDp[0]), dpToPixel(paddingsInDp[0]), dpToPixel(paddingsInDp[0]));        }
+        return true;
     }
 }

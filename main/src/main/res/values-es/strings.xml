@@ -228,7 +228,6 @@
     <string name="err_select_logimage_failed">No se pudo seleccionar una imagen para el registro.</string>
     <string name="err_acquire_image_failed">No se pudo obtener una imagen.</string>
     <string name="err_tb_display">c:geo no puede mostrar el rastreable que buscas. ¿Es realmente un rastreable?</string>
-    <string name="err_tb_details_open">c:geo no puede abrir los detalles del rastreable.</string>
     <string name="err_tb_not_loggable">Este rastreable no se puede registrar.</string>
     <string name="err_tb_not_found">c:geo no puede encontrar el rastreable %s.</string>
     <string name="err_tb_find_that">c:geo no encuentra ese rastreable.</string>
@@ -2126,7 +2125,6 @@ Nombre de archivo:%2$s</string>
     <string name="cancel">Cancelar</string>
     <string name="ok" tools:ignore="ButtonCase">Aceptar</string>
     <!-- ChipChoiceGroup -->
-    <string name="chipchoicegroup_selectall">Seleccionar todo</string>
     <!-- render theme legend: category "areas" -->
     <string name="rtl_category_areas">Áreas</string>
     <string name="rtl_fell_meadow">estiva / pradera</string>

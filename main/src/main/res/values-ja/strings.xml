@@ -226,7 +226,6 @@
     <string name="err_select_logimage_failed">添付画像ファイルの選択に失敗しました</string>
     <string name="err_acquire_image_failed">画像ファイルの取得に失敗しました</string>
     <string name="err_tb_display">トラッカブルを表示することができません。本当にトラッカブルですか?</string>
-    <string name="err_tb_details_open">トラッカブルの詳細を開くことができません</string>
     <string name="err_tb_not_loggable">このトラッカブルにはログを書くことができません</string>
     <string name="err_tb_not_found">トラッカブル「%s」が見つかりません。</string>
     <string name="err_tb_find_that">トラッカブルが見つかりません</string>
@@ -2116,7 +2115,6 @@ Google翻訳アプリで各言語の辞書をダウンロードしておけば�
     <string name="cancel">キャンセル</string>
     <string name="ok" tools:ignore="ButtonCase">OK</string>
     <!-- ChipChoiceGroup -->
-    <string name="chipchoicegroup_selectall">すべて選択</string>
     <!-- render theme legend: category "areas" -->
     <string name="rtl_category_areas">地域</string>
     <!-- render theme legend: category "Roads & Paths" -->
